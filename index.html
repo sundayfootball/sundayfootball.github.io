@@ -111,12 +111,59 @@
         videoPlayer.play();
     });
 
+    let popupIsActive = false; // Flag to track popup state
+
     // Show popup after 10 seconds
     setTimeout(() => {
+        popupIsActive = true; // Set flag
         const popup = document.getElementById('popup');
         popup.classList.add('active');
         videoPlayer.pause();
     }, 10000);
+
+
+    // ======================================================
+    // === NEW CODE FOR UNMUTE & LANDSCAPE/FULLSCREEN ===
+    // ======================================================
+
+    // This function handles the user's first interaction
+    function initialUserInteraction(event) {
+        // If popup is active, do nothing.
+        // This lets the popup button work without triggering this.
+        if (popupIsActive) {
+            document.removeEventListener('click', initialUserInteraction);
+            document.removeEventListener('touchstart', initialUserInteraction);
+            return;
+        }
+
+        // 1. Enable voice (unmute)
+        videoPlayer.muted = false;
+
+        // 2. Request Fullscreen
+        if (videoPlayer.requestFullscreen) {
+            videoPlayer.requestFullscreen().catch(err => {
+                // Log errors (e.g., user denied) silently
+                console.log(`Error attempting full-screen: ${err.message}`);
+            });
+        }
+
+        // 3. Request Landscape Orientation (for mobile)
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+            screen.orientation.lock('landscape').catch(err => {
+                // Log errors (e.g., not supported on desktop) silently
+                console.log(`Error attempting orientation lock: ${err.message}`);
+            });
+        }
+
+        // 4. Remove the listeners since this was a one-time action
+        document.removeEventListener('click', initialUserInteraction);
+        document.removeEventListener('touchstart', initialUserInteraction);
+    }
+
+    // Listen for the first click or tap
+    document.addEventListener('click', initialUserInteraction);
+    document.addEventListener('touchstart', initialUserInteraction);
+
 </script>
 
 </body>
